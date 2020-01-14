@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<head>
+<title>Textured 3D Scene</title>
+<script src="./three.js"></script>
+<script src="./OrbitControls.js"></script>
+<script src="GLTFLoader.js"></script>
+<script src="KeyboardState.js"></script>
+<script>
+    var scene, camera, renderer; // Three.js rendering basics.
+
+    var canvas; // The canvas on which the image is rendered.
+
+    var mouse; // Used to navigate the scene with the mouse
+
+    var texLoader;  // Texture loader
+    var keyboard = new KeyboardState(); // used for keyboard control
+
+    // Keep track of time
+    var clock = new THREE.Clock();  
+
+    // Time at the beginning of animation 
+    var startTime = clock.getElapsedTime();
+
+
+    var SeeSaw; // Blender model
+
+    var SeeSawFlag = false;
+
+    var eyeLight;// Global lamp object
+    var SeeSawLog
+    var x= 1/23;
+    var keyframes = [
+    [0,-1.2,-1.6,.8,3.5e-18,-30,0,1.4,1.3,-.8,2.4e-17,26,0,0,0,0,0,0,53,292],
+    [0.15,-1.2,-1.6,.8,3.5e-18,-30,0,1.4,1.3,-.8,2.4e-17,26,0,0,0,0,0,0,20,110], //1
+    [2*x,-1.16,-1.6,0.8,3.5e-18,-30,0,.4,1.3,-.6,2.4e-17,25,0,0,0,0,0,0,20,110], //2
+    [3*x,-1.2,-1.6,.8,3.5e-18,-30,0,1.4,1.3,-.8,2.4e-17,26,0,0,0,0,0,0,20,110], //3
+    [4*x,-1.4,-0.4,0,0,-30,0,1,1,-.2,.02,24,6,0,0,0,0,0,20,110], //4
+    [5*x,-1.4,-.4,0,0,-30,0,.74,2,-1,.02,17,5.4,0,0,0,0,0,20,110], //5
+    [6*x,-1.4,-.4,0,0,-30,0,.74,2,-1,.02,17,2,.2,0,0,0,0,20,110], //6
+    [7*x,-.6,-2,1,0,-30,0,.74,2,-1,.02,17,2,.2,0,0,0,0,20,110], //7
+    [8*x,-1.4,-.7,.1,-.1,-28,13,.74,2,-1,.02,17,2,.2,0,0,0,0,20,110], //8
+    [9*x,-.6,-2,1,0,-15,9,.74,2,-1,.02,17,2,.2,0,0,0,0,20,110],
+    [10*x,-.6,-2,1,.2,-15,2,.74,1,-.2,.02,17,9,-.2,0,0,0,0,20,110],//9
+    [11*x,-1.1,-.9,.4,-.2,-15,8.6,1.3,1.5,-.9,0,17,2,.2,0,0,0,0,20,110],//10
+    [12*x,-.6,-2,1,.2,-15,2,.8,1,-.2,.02,17,9,-.2,0,0,0,0,20,110],//11
+    [13*x,-1.1,-.9,.4,-.2,-15,8.6,1.3,1.5,-.9,0,17,2,.2,0,0,0,0,20,110],//12
+    [14*x,-.6,-2,1,.2,-15,2,.8,1,-.2,.02,17,9,-.2,0,0,0,0,20,110],//13
+    [15*x,-1.1,-.9,.4,-.2,-15,8.6,1.3,1.5,-.9,0,17,2,.2,0,0,0,0,20,110],//14
+    [16*x,-1.7,-.9,.4,-.2,-15,8.6,1.3,1.5,-.9,0,17,2,.2,0,0,0,0,20,110],//15
+    [17.5*x,-1.1,-.9,.4,-.2,-15,8.6,1.3,1.5,-.9,0,17,2,.2,0,0,0,0,20,110],//16
+    [19*x,-.6,-2,1,.2,-15,2,.8,1,-.2,.02,17,9,-.2,0,0,0,0,20,110],//17
+    [19.5*x,-1.1,-.5,.1,-.2,-15,13.5,1.3,1.5,-.9,0,17,2,.2,0,0,0,0,20,110],//18
+    [20*x,-.6,-2,1,.2,-15,2,.8,1,-.2,.02,17,9,-.2,0,0,0,0,20,110],//19
+    [20.5*x,-.6,-2,1,.2,-15,2,.8,1,-.2,.02,17,33,-.2,0,0,0,0,20,110],//20
+    [21.5*x,-.95,-2,1,.2,-15,2,1.36,1.46,-.64,0,11,1.5,-.2,1.01,11,Math.PI/2,-67,41,26],
+    [23,-.95,-2,1,.2,-15,2,1.36,1.46,-.64,0,11,1.5,-.2,1.01,11,Math.PI/2,-67,41,26],
+    //[25,-.95,-2,1,.2,-15,2,1.36,1.46,-.64,0,11,1.5,-.2,1.01,11,Math.PI/2,18,5,40],
+    //[20.5*x,-.9,-1.7,.9,0,-14,5,1.36,1.46,-.64,0,10,0,1.01,11],//12
+    ]
+
+
+    /*var lamp;
+    // The parts of our lamp
+    var base, lowerArm, upperArm, shade;*/ 
+    function loadModels()
+    {
+        const loader = new THREE.GLTFLoader();
+        const url = 'SeeSaw_Final.glb';
+        const url1 = 'metal_lamp.glb';
+        const url2 = 'metal_lamp.glb';
+        const url3 = 'slide.glb';
+
+
+        // function to execute when model has been loaded 
+        function onLoad ( gltf ) 
+        {
+            //console.log( gltf.scene);
+            console.log( gltf.scene.children);
+            console.log(gltf.scene.children[2])
+            SeeSaw = gltf.scene;
+            scene.add(SeeSaw);
+            SeeSawLog=gltf.scene.children[2];
+            SeeSawBase=gltf.scene.children[1];
+            SeeSaw.rotation.y=Math.PI/2
+            SeeSawLog.rotation.y+=Math.PI/2
+            SeeSawLog.scale.z+=2.8
+            SeeSawLog.scale.x+=12
+            SeeSaw.position.y+=5.3
+        
+            SeeSawFlag = true;  
+        } 
+        function onload1 (gltf)
+        {
+          	Lamp=gltf.scene;
+          	scene.add(Lamp);    
+          	Lamp.scale.set(10,10,10)
+            Lamp.position.set(100,0,-100)      	
+        } 
+        function onload2 (gltf)
+        {
+            Lamp=gltf.scene;
+            scene.add(Lamp);    
+            Lamp.scale.set(10,10,10)
+            Lamp.position.set(-100,0,-100)         
+        }
+        function onload3 (gltf)
+        {
+            Slide=gltf.scene;
+            scene.add(Slide);
+            Slide.position.set(5,30,-100)
+            Slide.scale.set(10,10,10)
+            Slide.rotation.z=-2*Math.PI;
+            Slide.rotation.y=-0.5;
+        }
+
+        loader.load(url, onLoad);
+        loader.load(url1, onload1);
+        loader.load(url2, onload2);
+        loader.load(url3, onload3);
+    }
+
+    // Create a camera, sitting on the positive z-axis.  The camera is not part of the scene
+    function createCamera() {
+        camera = new THREE.PerspectiveCamera(40, canvas.width/canvas.height, 0.1, 1000);
+        //camera.rotation.=.5
+        camera.position.set(0,20,110);
+        //camera.position.set(0,0,0)
+        // Add orbit control to allow the camera orbit around
+        mouse = new THREE.OrbitControls(camera, renderer.domElement);
+    }
+
+    // Create the lamp base with specified radius and height
+   function createBase(radius, height)
+    {
+        var base = new THREE.Object3D();
+
+        var mat = new THREE.MeshPhongMaterial( { color: "gray" } );
+
+        // TODO: apply texture
+
+        // SphereGeometry(radius, horizSeg, vertSeg, horizStartAng, horizLenAngle, vertStartAng, vertLenAng )
+        var geom = new THREE.SphereGeometry(radius, 32, 32, 0, 2*Math.PI, 0, Math.PI/2 );
+        var mesh = new THREE.Mesh(geom, mat);
+        mesh.scale.y = height/radius;
+        mesh.position.y = -height;
+        base.add(mesh);
+
+        // CircleGeometry(radius, segments) 
+        var capGeom = new THREE.CircleGeometry(radius, 32);
+        var capMesh = new THREE.Mesh(capGeom, mat);
+        capMesh.rotation.x = Math.PI / 2;
+        mesh.add(capMesh);
+
+        return base; 
+    }
+
+    // Create a lamp arm with specified radius and height
+    function createArm(radius, height)
+    {
+        var arm = new THREE.Object3D();
+
+        var mat = new THREE.MeshPhongMaterial( { color: "lightblue" } );
+
+        // CylinderGeometry(radiusTop, radiusBottom, height) 
+        var geom = new THREE.CylinderGeometry(radius, radius, height, 64, 64);
+        var mesh = new THREE.Mesh(geom, mat);
+        mesh.position.y += height/2;
+        arm.add(mesh);
+
+        return arm;
+    }
+
+    // Create the lamp shade with specified radius and height
+    function createShade(radius, height)
+    {
+        var shade = new THREE.Object3D();
+
+        var mat = new THREE.MeshPhongMaterial( { color: 0xFF7F50, side: THREE.DoubleSide } ); 
+
+        // ConeGeometry(radius, height, radialSeg, heightSeg, open?) 
+        var geom = new THREE.ConeGeometry(radius, height, 64, 1, true);
+        var mesh = new THREE.Mesh(geom, mat);
+        mesh.position.y += height/2;
+        mesh.rotation.z = Math.PI;
+        shade.add(mesh);        
+
+        // Step 3: Add a spotlight as a child of Luxo's shade
+        // SpotLight (color, intensity)
+        var spotLight = new THREE.SpotLight("white", 0.8); 
+
+        // set spotlight position, direction and angle
+        spotLight.position.set(0, 0, 0);            // relative to parent shade
+        spotLight.target.position.set(0,height,0);  // relative to parent shade
+        spotLight.angle = Math.atan(radius/height) / 1.5;
+        spotLight.penumbra = 0.1;       // outer 10% of spotlight cone fades out
+
+        // and both spotlight and its target to the scene
+        shade.add(spotLight);
+        shade.add(spotLight.target);
+
+        return shade;
+    }
+
+
+    function createFloor(length, width, height)
+    {
+         var floor = new THREE.Object3D();
+
+            //var material = new THREE.MeshPhongMaterial({ color: 0xCCAAAA, side: THREE.DoubleSide });
+
+            // create ground
+            var texLoader = new THREE.TextureLoader();
+            var floorTexture = texLoader.load("Sandtexture.jpg");
+            floorTexture.wrapS=THREE.RepeatWrapping;
+            floorTexture.wrapT=THREE.RepeatWrapping;
+            floorTexture.repeat.set(10,10)
+            var floorMaterial = new THREE.MeshPhongMaterial({ map: floorTexture, side: THREE.DoubleSide });
+
+            var geom = new THREE.PlaneGeometry(length, width);
+            var ground = new THREE.Mesh(geom, floorMaterial);
+            ground.rotation.x = Math.PI / 2;
+            floor.add(ground);
+            return floor;
+    }
+
+    // Create the scene. This function is called once, as soon as the page loads.
+    // The renderer has already been created before this function is called.
+    function createScene() {
+        
+        renderer.setClearColor(0); // Set background color (0, or 0x000000, is black).
+        scene = new THREE.Scene(); // Create a new scene which we can add objects to.
+        loadModels();
+        texLoader = new THREE.TextureLoader(); // used to create the parts below
+
+        // Build the lamp parts
+        base = createBase(3.5, 1.2);
+        lowerArm = createArm(0.5, 5);
+        upperArm = createArm(0.5, 5);
+        shade = createShade(2.5, 4);
+
+        // Build the lamp hierarchal structure 
+        lamp = new THREE.Object3D();
+        scene.add(lamp);        // add lamp as a child of the entire scene
+        lamp.add(base);         // add base as a child of lamp    
+        lamp.add(lowerArm);     // add lowerArm as a child of lamp (not base, base can rotate independently)
+        lowerArm.add(upperArm); // add upperArm as a child of lowerArm
+        upperArm.add(shade);    // add shade as a child of upperArm
+  
+        // position children relative to parents
+        base.position.y += 1.2;
+        upperArm.position.y += 5;
+        shade.position.y += 5;
+
+        // rotate lamp parts
+        //lowerArm.rotation.z -= 0.1;
+        upperArm.rotation.z -= 0.4;
+        shade.rotation.z -= 1.4;
+
+        // position lamp in the scene
+        lamp.position.set(-30, 0, 0);
+        //lamp.rotation
+
+        
+        
+//Jr.Luxo----------------------
+        base1 = createBase(1, 0.5);
+        lowerArm1 = createArm(0.2, 2.5);
+        upperArm1 = createArm(0.2, 2.5);
+        shade1 = createShade(1.5, 2);
+
+        // Build the lamp hierarchal structure 
+        lamp1 = new THREE.Object3D();
+        scene.add(lamp1);        // add lamp as a child of the entire scene
+        lamp1.add(base1);         // add base as a child of lamp    
+        lamp1.add(lowerArm1);     // add lowerArm as a child of lamp (not base, base can rotate independently)
+        lowerArm1.add(upperArm1); // add upperArm as a child of lowerArm
+        upperArm1.add(shade1);    // add shade as a child of upperArm
+  
+        // position children relative to parents
+        base1.position.y += 0.5;
+        upperArm1.position.y += 2.5;
+        shade1.position.y += 2.5;
+
+        // rotate lamp parts
+        //lowerArm1.rotation.z += 0.1;
+        upperArm1.rotation.z += 0.4;
+        shade1.rotation.z += .5;
+
+        // position lamp in the scene
+        lamp1.position.set(25, 0, 0);
+        
+        
+
+        var wall = new THREE.Object3D();
+           var wallTexture = texLoader.load("sky-texture.jpg");
+           
+           var wallMaterial = new THREE.MeshPhongMaterial({ map: wallTexture, side: THREE.DoubleSide });
+           var wall_geom = new THREE.PlaneGeometry(600, 400);
+           var wall_mesh = new THREE.Mesh(wall_geom, wallMaterial);
+           wall_mesh.rotation.x= Math.PI / 2;
+           wall_mesh.rotation.z= Math.PI / 2;
+
+            
+
+           wall.add(wall_mesh);
+           // wall.add(upperArm);
+           wall.position.y += 200;
+           wall.position.z -= 200;
+           wall.rotation.x = Math.PI / 2;
+           wall.rotation.y = -Math.PI / 2;
+           scene.add(wall);
+
+        // create background
+        var floor = createFloor(600, 400, 20);
+        //floor.position.y -= .01;
+        scene.add(floor);
+
+        
+    }
+ 
+    // add lights to the scene
+    function createLights()
+    {
+        // Ambient Light (color, intensity)
+        var ambient = new THREE.AmbientLight(0x404040); // soft white
+        scene.add(ambient);
+
+        // DirectionalLight (color, intensity) in the direction the camera faces
+        var eyeLight = new THREE.DirectionalLight( "white", 0.7 );   
+        eyeLight.position.set(camera.position.x,camera.position.y,camera.position.z);  // camera viewpoint
+        scene.add(eyeLight);
+
+        // Dim DirectionalLight (color, intensity) shining from above
+        var topLight = new THREE.DirectionalLight( "white", 0.3 ); 
+        topLight.position.set(-10,20,0);
+        scene.add( topLight );
+    }
+    function update() {
+        //mouse.update();
+        keyboard.update();
+        //Luxo 
+
+        if ( keyboard.pressed("1") ) 
+        {
+            // TODO: add rotation for shade clockwise
+            shade.rotation.z -= 0.01;
+        }
+
+        if ( keyboard.pressed("2") ) 
+        {
+            // TODO: add rotation for shade counter-clockwise
+            shade.rotation.z += 0.01;
+        }
+        
+        if ( keyboard.pressed("Q") ) 
+        {
+            // rotate arm clockwise
+            upperArm.rotation.z -= 0.01;
+        }
+        if ( keyboard.pressed("W") ) 
+        {
+            // rotate arm counter-clockwise
+            upperArm.rotation.z += 0.01;
+        }
+        if ( keyboard.pressed("A") ) {
+            // rotate lowerArm clockwise
+            lowerArm.rotation.z -= 0.01;
+        }
+        if ( keyboard.pressed("S") ) {
+            // rotate lowerArm counter-clockwise
+            lowerArm.rotation.z += 0.01;
+        }
+        if ( keyboard.pressed("Z") ) {
+            // TODO rotate base clockwise
+            base.rotation.z -= 0.01;
+        }
+        if ( keyboard.pressed("X") ) {
+            // TODO rotate base counter-clockwise
+            base.rotation.z += 0.01;
+        }
+       
+        if(keyboard.pressed("V"))
+        {
+        	lamp.position.x+=0.01;
+        }
+        if(keyboard.pressed("C"))
+        {
+            lamp.position.x-=0.01;
+        }
+        if(keyboard.pressed("E"))
+        {
+        	lamp.position.y+=0.01;
+        }
+        if(keyboard.pressed("D"))
+        {
+            lamp.position.y-=0.01;
+        }
+
+
+        //Jr.Luxo
+
+        if ( keyboard.pressed("8") ) 
+        {
+            // TODO: add rotation for shade clockwise
+            shade1.rotation.z -= 0.01;
+        }
+
+        if ( keyboard.pressed("9") ) 
+        {
+            // TODO: add rotation for shade counter-clockwise
+            shade1.rotation.z += 0.01;
+        }
+        
+        if ( keyboard.pressed("I") ) 
+        {
+            // rotate arm clockwise
+            upperArm1.rotation.z -= 0.01;
+        }
+        if ( keyboard.pressed("O") ) 
+        {
+            // rotate arm counter-clockwise
+            upperArm1.rotation.z += 0.01;
+        }
+        if ( keyboard.pressed("J") ) {
+            // rotate lowerArm clockwise
+            lowerArm1.rotation.z -= 0.01;
+        }
+        if ( keyboard.pressed("K") ) {
+            // rotate lowerArm counter-clockwise
+            lowerArm1.rotation.z += 0.01;
+        }
+        if ( keyboard.pressed("M") ) {
+            // TODO rotate base clockwise
+            base1.rotation.z -= 0.01;
+        }
+        if ( keyboard.pressed(",") ) {
+            // TODO rotate base counter-clockwise
+            base1.rotation.z += 0.01;
+        }
+       
+        if(keyboard.pressed("N"))
+        {
+            lamp1.position.x+=0.01;
+        }
+        if(keyboard.pressed("B"))
+        {
+            lamp1.position.x-=0.01;
+        }
+        if(keyboard.pressed("Y"))
+        {
+            lamp1.position.y+=0.01;
+        }
+        if(keyboard.pressed("H"))
+        {
+            lamp1.position.y-=0.01;
+        }
+        if (keyboard.pressed("5")){
+        	camera.position.x+=0.2;
+        }
+        if (keyboard.pressed("6")){
+        	camera.position.x-=0.2;
+        }
+        if (keyboard.pressed("R")){
+        	camera.position.y+=0.2;
+        }
+        if (keyboard.pressed("F")){
+        	camera.position.y-=0.2;
+        }
+        if (keyboard.pressed("Y")){
+        	camera.position.z+=0.2;
+        }
+        if (keyboard.pressed("H")){
+        	camera.position.z-=0.2;
+        }
+        // TODO: print keyframe parameters when user hits 'p'
+        if ( keyboard.pressed("P") ) {
+        // print keyframe parameters
+        //console.log(p pressed);
+        console.log("shade z rotate :"+shade.rotation.z+"\n"+"upper arm z : "+upperArm.rotation.z+"\n"+"lowerArm z:"+lowerArm.rotation.z+"\n","base z:"+base.rotation.z+"\n","lamp x:"+lamp.position.x+"\n","lamp y:"+lamp.position.y+"\n"+"jr shade z rotate"+shade1.rotation.z+"\n"+"jr upper arm z"+upperArm1.rotation.z+"\n"+"jr lowerArm z:"+lowerArm1.rotation.z+"\n","jr base z:"+base1.rotation.z+"\n","jr lamp x:"+lamp1.position.x+"\n","jr lamp y:"+lamp1.position.y,);
+        console.log("cam x:"+camera.position.x+"\n"+"cam y:"+camera.position.y+"\n"+"cam z:"+camera.position.z);
+        }
+    } 
+
+    function keyframeInterp(keyframes, cycleTime, currentTime) {
+
+    var keys=[];  // array of interpolated values
+    var nKeys = keyframes[0].length-1;  // number of keys
+
+    // find time elapsed within the current cycle and scale to [0,1]
+    var time = ((currentTime - startTime) % cycleTime) / cycleTime; 
+    
+    // find the next keyframe based on time
+    for (var i = 0; i < keyframes.length; i++) {
+        if (time < keyframes[i][0]) break;
+    }
+    i = i-1; // previous keyframe is at index i-1
+
+    // scale interpolation parameter t to interval [0,1]
+    var t = (time - keyframes[i][0]) / (keyframes[i+1][0] - keyframes[i][0]); 
+    
+    // linear interpolation between keyframes i and i+1 
+    for(var j = 1; j <= nKeys; j++)
+        keys.push((1-t) * keyframes[i][j] + t * keyframes[i+1][j]); 
+
+    return keys;
+}
+
+    // Render the scene. This is called for each frame of the animation.
+    function render() {
+
+       // Loop
+        requestAnimationFrame(render);
+        update();
+        var keys = keyframeInterp(keyframes, 35, clock.getElapsedTime());
+        if(SeeSawFlag){
+        shade.rotation.z=keys[0]
+        upperArm.rotation.z=keys[1]
+        lowerArm.rotation.z=keys[2]
+        base.rotation.z=keys[3]
+        lamp.position.x=keys[4]
+        lamp.position.y=keys[5]
+        shade1.rotation.z=keys[6]
+        upperArm1.rotation.z=keys[7]
+        lowerArm1.rotation.z=keys[8]
+        base1.rotation.z=keys[9]
+        lamp1.position.x=keys[10]
+        lamp1.position.y=keys[11]
+        SeeSaw.children[2].rotation.x=keys[12]
+        shade.rotation.x=keys[13]
+        lamp1.position.z=keys[14] 
+        lamp1.rotation.x=keys[15]
+        camera.position.x=keys[16]
+        camera.position.y=keys[17]
+        camera.position.z=keys[18]
+        } 
+	/*if(SeeSawFlag){
+        // code for things to change here
+                SeeSaw.children[2].rotation.x=0.2
+     //          SeeSawBase.scale.set(2,5,2)
+            
+                
+	}*/
+
+        // Re-render the scene
+
+        renderer.render(scene, camera);
+
+        mouse.update();
+    }
+
+    //----------------------------------------------------------------------------------
+
+    // The init() function is called by the onload event when the document has loaded.
+    function init() {
+        try {
+            canvas = document.getElementById("glcanvas");
+            renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true} );
+        }
+        catch (e) {
+            document.getElementById("canvas-holder").innerHTML = "<h3><b>WebGL is not available.</b><h3>";
+            return;
+        }
+    
+        // create camera
+        createCamera();
+        
+        // create scene 
+        createScene();
+
+        // create lights 
+        createLights();
+
+        // render scene
+        render();
+    }
+
+</script>
+
+</head>
+<body onload="init()">
+<div id="canvas-holder">
+    <canvas id="glcanvas" width="600" height="400"></canvas>
+</div>
+<audio controls="" style="float: right;">
+  
+    <source src="audio.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+  </audio>
+</body>
+</html>
